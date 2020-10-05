@@ -11,7 +11,11 @@ class Asteroid:
         self.x3, self.y3 = x + WIDTH, y + HEIGHT
         self.direction = random.randint(0, 360)
         self.size = self.velocity = size
-        self.velocity *= 4
+        self.velocity *= 4 * 30/FPS
+        if self.size > 1:
+            self.velocity /= 1.4
+        if self.size > 2:
+            self.velocity /= 1.3
         if self.size == 1:
             self.surf = pygame.Surface((200, 200), pygame.SRCALPHA)
         elif self.size == 2:
@@ -76,16 +80,17 @@ class Asteroid:
         asteroids.remove(self)
         return asteroids
 
-    def player_collide(self, player):
+    def collide(self, player):
         player_mask = player.get_mask()
         mask = pygame.mask.from_surface(self.surf)
-        for px, py in player.pairs:
-            for ax, ay in self.pairs:
-                offset = (round(ax) - round(px), round(ay) - round(py))
-                point = player_mask.overlap(mask, offset)
+        if not player.invulnerable:
+            for px, py in player.pairs:
+                for ax, ay in self.pairs:
+                    offset = (round(ax) - round(px), round(ay) - round(py))
+                    point = player_mask.overlap(mask, offset)
 
-                if point:
-                    return True
+                    if point:
+                        return "crash", None
 
         for projectile in player.projectiles:
             for px, py in projectile.pairs:
@@ -95,9 +100,9 @@ class Asteroid:
                     point = projectile_mask.overlap(mask, offset)
 
                     if point:
-                        return True
+                        return "hit", projectile
 
-        return False
+        return False, None
 
     def _update_pairs(self):
         xs, ys = sorted([self.x1, self.x2, self.x3]), sorted([self.y1, self.y2, self.y3])
@@ -127,17 +132,22 @@ class Player:
         self.width, self.height = 80, 100
         self.lives = lives
         self.direction = 0
-        self.turn_speed = 10 * 3/sensitivity
+        self.turn_speed = 10 * 3/sensitivity * 30/FPS
         self.velocity = 0
-        self.acceleration = 2 * 3/sensitivity
+        self.acceleration = 2 * 3/sensitivity * 30/FPS
         self.surf = pygame.Surface((self.width, self.height), pygame.SRCALPHA)
         self.move_surf = pygame.Surface((self.width, self.height), pygame.SRCALPHA)
         self._create_surfs()
         self.pairs = []
         self.projectiles = []
         self.moving = False
+        self.time = 0
+        self.invulnerable = True
 
     def update(self, win, events):
+        self.time += 1
+        if self.invulnerable:
+            self.invulnerable = False if self.time == 150 else True
         self.move()
         self._update_projectiles(win, events)
         self.draw(win)
@@ -150,7 +160,7 @@ class Player:
             self.direction += 1 * self.turn_speed
         if keys[pygame.K_UP]:
             self.velocity += 0.2*self.acceleration
-            self.velocity = min(self.velocity, 20)
+            self.velocity = min(self.velocity, 10)
             self.moving = True
         else:
             self.moving = False
@@ -195,21 +205,28 @@ class Player:
         self._update_pairs()
 
         if not self.moving:
-            self.velocity /= 1.03
-            self.velocity -= 0.18
+            # self.velocity /= 1.03
+            self.velocity -= 0.06
             self.velocity = max(self.velocity, 0)
 
     def draw(self, win):
-        center = self.surf.get_rect().center
         surf = pygame.transform.rotate(self.surf, -self.direction)
         move_surf = pygame.transform.rotate(self.move_surf, -self.direction)
-        rect = surf.get_rect(center=center)
-        if not self.moving:
-            for x, y in self.pairs:
-                win.blit(surf, (x + rect.x, y + rect.y))
+        rect = surf.get_rect(center=self.surf.get_rect().center)
+        if not self.invulnerable:
+            if not self.moving:
+                for x, y in self.pairs:
+                    win.blit(surf, (x + rect.x, y + rect.y))
+            else:
+                for x, y in self.pairs:
+                    win.blit(move_surf, (x + rect.x, y + rect.y))
         else:
-            for x, y in self.pairs:
-                win.blit(move_surf, (x + rect.x, y + rect.y))
+            pygame.display.update()
+            win.blit(surf, (self.x2 + rect.x, self.y2 + rect.y))
+
+    def make_invulnerable(self):
+        self.invulnerable = True
+        self.time = 0
 
     def hit(self):
         self._reset()
@@ -218,8 +235,11 @@ class Player:
         return pygame.mask.from_surface(self.surf)
 
     def _add_projectiles(self, events):
+        keys = pygame.key.get_pressed()
+        if keys[pygame.K_SPACE] and len(self.projectiles) < 10 and self.time % 25 == 0:
+            self.projectiles.append(Projectile(self))
         for event in events:
-            if event.type == pygame.KEYDOWN:
+            if event.type == pygame.KEYDOWN and len(self.projectiles) < 10:
                 if event.key == pygame.K_SPACE:
                     self.projectiles.append(Projectile(self))
 
@@ -228,7 +248,7 @@ class Player:
         rem = []
         for projectile in self.projectiles:
             projectile.update(win)
-            if projectile.time == 60:
+            if projectile.time == 150:
                 rem.append(projectile)
 
         for projectile in rem:
@@ -257,7 +277,7 @@ class Projectile:
         self.x3, self.y3 = player.x3 + player.surf.get_width()//2, player.y3 + player.surf.get_height()//2
         self.direction = player.direction
         self.velocity = 5
-        self.velocity *= 5
+        self.velocity *= 7 * 30/FPS
         self.surf = pygame.Surface((6, 6), pygame.SRCALPHA)
         pygame.draw.circle(self.surf, WHITE, (3, 3), 3)
         self.pairs = []
