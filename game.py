@@ -27,6 +27,9 @@ def draw_window(win, width, height, asteroids, player, events, score, max_score)
     win.blit(text2, (WIDTH - text2.get_width() - 5, 5 + 5 + text1.get_height()))
     text3 = FONT.render(f"Lives: {player.lives}", 1, WHITE)
     win.blit(text3, (5, 5))
+    small_surf = pygame.transform.scale(player.surf, (50, 65))
+    for i in range(player.lives):
+        win.blit(small_surf, (80*i + 5, 5 + text3.get_height() + 5))
     if player.lives == 0:
         pygame.display.update()
         pygame.time.delay(2000)
@@ -49,6 +52,14 @@ def check_collision(player, asteroids, score, n):
             player.projectiles.remove(mesg[1])
         if mesg[0] == "crash":
             player.hit()
+            if mesg[0] == "hit":
+                asteroids = asteroid.split(asteroids)
+                if asteroid.size == 3:
+                    score += 100
+                elif asteroid.size == 2:
+                    score += 50
+                else:
+                    score += 20
             asteroids = asteroid.split(asteroids)
 
     return player, asteroids, score, n
