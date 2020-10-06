@@ -83,6 +83,7 @@ def main(win, width, height):
         clock.tick(FPS)
         events = pygame.event.get()
         if len(asteroids) == 0:
+            score += n * 20
             n += 1
             n = min(n, 7)
             player.make_invulnerable()
