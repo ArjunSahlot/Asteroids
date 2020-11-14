@@ -5,7 +5,7 @@ from Asteroids.classes import Asteroid, Player
 # Window Management
 os.environ['SDL_VIDEO_WINDOW_POS'] = "%d,%d" % (screen_width // 2 - WIDTH // 2, screen_height // 2 - HEIGHT // 2)
 WINDOW = pygame.display.set_mode((WIDTH, HEIGHT))
-pygame.display.set_caption("Asteroids, By: Arjun Sahlot")
+pygame.display.set_caption("Asteroids")
 
 
 def create_asteroids(n):
