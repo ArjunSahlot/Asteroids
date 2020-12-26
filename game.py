@@ -20,7 +20,6 @@ def draw_window(win, width, height, asteroids, player, events, score, max_score)
     win.fill(BLACK)
     for asteroid in asteroids:
         asteroid.update(win)
-    player.update(win, events)
     text1 = FONT.render(f"Max Score: {max_score}", 1, WHITE)
     text2 = FONT.render(f"Score: {score}", 1, WHITE)
     win.blit(text1, (WIDTH - text1.get_width() - 5, 5))
@@ -30,6 +29,7 @@ def draw_window(win, width, height, asteroids, player, events, score, max_score)
     small_surf = pygame.transform.scale(player.surf, (50, 65))
     for i in range(player.lives):
         win.blit(small_surf, (80*i + 5, 5 + text3.get_height() + 5))
+    player.update(win, events)
     if player.lives == 0:
         pygame.display.update()
         pygame.time.delay(2000)
