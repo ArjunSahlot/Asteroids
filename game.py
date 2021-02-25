@@ -18,8 +18,8 @@
 #
 
 import pygame, os, random
-from Asteroids.constants import *
-from Asteroids.classes import Asteroid, Player
+from constants import *
+from classes import Asteroid, Player
 
 # Window Management
 os.environ['SDL_VIDEO_WINDOW_POS'] = "%d,%d" % (screen_width // 2 - WIDTH // 2, screen_height // 2 - HEIGHT // 2)
