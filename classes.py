@@ -19,7 +19,7 @@
 
 import pygame, random, math
 import numpy as np
-from Asteroids.constants import *
+from constants import *
 
 
 class Asteroid:
